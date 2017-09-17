@@ -2,6 +2,9 @@
     "name": "line-first-trial",
     "version": "1.0.0",
     "main": "index.js",
+    "scripts": {
+        "start": "node $INSPECT_OPTIONS index.js"
+    },
     "repository": "https://github.com/kazuma1989/line-first-trial.git",
     "author": "kazuma1989 <funifuni.1204@gmail.com>",
     "license": "MIT",
