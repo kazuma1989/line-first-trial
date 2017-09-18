@@ -3,13 +3,20 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "start": "node $INSPECT_OPTIONS index.js"
+        "start": "node $INSPECT_OPTIONS index.js",
+        "test": "mocha"
     },
     "repository": "https://github.com/kazuma1989/line-first-trial.git",
     "author": "kazuma1989 <funifuni.1204@gmail.com>",
     "license": "MIT",
     "dependencies": {
         "@line/bot-sdk": "^3.0.0",
-        "express": "^4.15.4"
+        "express": "^4.15.4",
+        "morgan": "^1.8.2"
+    },
+    "devDependencies": {
+        "mocha": "^3.5.3",
+        "request": "^2.81.0",
+        "request-promise-native": "^1.0.4"
     }
 }
