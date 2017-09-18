@@ -5,8 +5,8 @@ const line = require("@line/bot-sdk");
 const { SignatureValidationFailed, JSONParseError } = require("@line/bot-sdk/exceptions");
 
 const config = {
-    channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || "xxx",
-    channelSecret: process.env.CHANNEL_SECRET || "xxx",
+    channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+    channelSecret: process.env.CHANNEL_SECRET,
 };
 
 let app = express();
@@ -47,15 +47,14 @@ app.use((error, request, response, next) => {
     }
 });
 
-let listen = (port) => {
-    port = port || process.env.PORT;
+let listen = () => {
+    let port = process.env.PORT;
     return app.listen(port, () => {
         console.log(`Node app is running on port ${port}`);
     });
 };
-
 if (require.main === module) {
-    listen(3000);
+    listen();
 }
 else {
     module.exports = listen;
