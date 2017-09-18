@@ -5,8 +5,8 @@ const splitStream = require("split");
 const { createHmac } = require("crypto");
 const { Client } = require("@line/bot-sdk");
 
-const listen = require("../index.js");
-const logger = require("../logger.js");
+const listen = require("../src/index.js");
+const logger = require("../src/logger.js");
 
 describe("index.js は", () => {
     let baseUrl;

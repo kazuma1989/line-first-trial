@@ -3,7 +3,7 @@ const express = require("express");
 const request = require("request-promise-native");
 const splitStream = require("split");
 
-const logger = require("../logger.js");
+const logger = require("../src/logger.js");
 
 describe("logger.js は", () => {
     let server;
