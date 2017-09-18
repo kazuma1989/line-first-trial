@@ -19,6 +19,7 @@
         "mocha": "^3.5.3",
         "request": "^2.81.0",
         "request-promise-native": "^1.0.4",
-        "sinon": "^3.2.1"
+        "sinon": "^3.2.1",
+        "split": "^1.0.1"
     }
 }

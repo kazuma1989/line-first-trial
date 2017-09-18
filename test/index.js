@@ -1,23 +1,33 @@
 const assert = require("assert");
 const request = require("request-promise-native");
 const sinon = require("sinon");
+const splitStream = require("split");
 
-const logger = require("../logger.js");
-sinon.stub(logger, "info");
-sinon.stub(logger, "debug");
-sinon.stub(logger, "middleware").callsFake((request, response, next) => {
-    next();
-});
-
-process.env.CHANNEL_ACCESS_TOKEN = "xxx";
-process.env.CHANNEL_SECRET = "xxx";
-process.env.PORT = 3000;
 const listen = require("../index.js");
+const logger = require("../logger.js");
 
 describe("index.js は", () => {
-    let server;
-    let baseUrl = `http://localhost:${process.env.PORT}`;
+    let baseUrl;
+    let stubs;
+    before(() => {
+        process.env.CHANNEL_ACCESS_TOKEN = "xxx";
+        process.env.CHANNEL_SECRET = "xxx";
+        process.env.PORT = 3000;
 
+        baseUrl = `http://localhost:${process.env.PORT}`;
+
+        let stubMiddleware = logger.middleware(splitStream());
+        stubs = [
+            sinon.stub(logger, "info"),
+            sinon.stub(logger, "debug"),
+            sinon.stub(logger, "middleware").returns(stubMiddleware),
+        ];
+    });
+    after(() => {
+        stubs.forEach(stub => stub.restore());
+    });
+
+    let server;
     beforeEach(() => {
         server = listen();
     });
