@@ -1,0 +1,23 @@
+{
+  "name": "line-first-trial",
+  "scripts": {
+  },
+  "env": {
+    "CHANNEL_ACCESS_TOKEN": {
+      "required": true
+    },
+    "CHANNEL_SECRET": {
+      "required": true
+    }
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
