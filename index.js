@@ -32,7 +32,13 @@ function listen() {
     app.post("/callback", middleware(config), (request, response) => {
         logger.info(request.body);
 
-        // let event = request.body.events[0];
+        let event = request.body.events[0];
+        if (event.type === "message") {
+            client.replyMessage(event.replyToken, {
+                type: "text",
+                text: "こんにちは",
+            });
+        }
 
         response.send(request.body);
     });
