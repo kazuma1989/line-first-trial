@@ -50,7 +50,7 @@ describe("index.js は", () => {
         }
     });
 
-    it("POST /callback は適切なヘッダーがないと 401", async () => {
+    it("POST /callback は適切なヘッダーがないと 401 を返す", async () => {
         try {
             await request.post(baseUrl + "/callback", {
                 headers: {

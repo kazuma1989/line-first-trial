@@ -1,5 +1,4 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const { Client, middleware } = require("@line/bot-sdk");
 const { SignatureValidationFailed, JSONParseError } = require("@line/bot-sdk/exceptions");
 
@@ -23,15 +22,9 @@ function listen() {
 
     app.use(logger.middleware());
 
+    // root endpoint
     app.get("/", (request, response) => {
         response.send("hello world");
-    });
-    app.post("/*", (request, response, next) => {
-        bodyParser.raw({ type: "*/*" })(request, response, () => {
-            let body = request.body.toString();
-            logger.info(body);
-            next();
-        });
     });
 
     // LINE endpoint
@@ -44,7 +37,7 @@ function listen() {
         response.send(request.body);
     });
 
-    app.use((error, request, response, next) => {
+    let lineErrorHandler = (error, request, response, next) => {
         if (error instanceof SignatureValidationFailed) {
             response.status(401).send(error.signature);
         }
@@ -54,7 +47,8 @@ function listen() {
         else {
             next(error);
         }
-    });
+    };
+    app.use(lineErrorHandler);
 
     return app.listen(port, () => {
         logger.info(`Node app is running on port ${port}`);
