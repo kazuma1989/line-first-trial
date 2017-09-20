@@ -12,7 +12,7 @@ let listen = () => {
     };
 
     let app = express();
-    app.use(logger.middleware());
+    app.use(express.static(`${__dirname}/img`));
     app.use(rawParser({
         type: "*/*"
     }));
@@ -28,6 +28,7 @@ let listen = () => {
         let rawBody = request.body.toString();
         let signature = request.headers["x-line-signature"];
         try {
+            logger.info(rawBody);
             await webhook.receive(rawBody || "", signature || "");
         }
         catch (error) {

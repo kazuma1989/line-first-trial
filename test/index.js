@@ -61,6 +61,10 @@ describe("index.js は", () => {
                     {
                         type: "message",
                         replyToken: "yyy",
+                        message: {
+                            type: "text",
+                            text: "こんにちは",
+                        },
                     },
                 ],
             };
@@ -68,10 +72,7 @@ describe("index.js は", () => {
             let response = await postJsonWithSignature(JSON.stringify(requestBody));
 
             assert.equal(response, "OK");
-            sinon.assert.calledWith(Client.prototype.replyMessage, requestBody.events[0].replyToken, {
-                type: "text",
-                text: "こんにちは",
-            });
+            sinon.assert.calledOnce(Client.prototype.replyMessage);
         });
 
         it("JSON が期待した構文でないと 400 を返す", async () => {
