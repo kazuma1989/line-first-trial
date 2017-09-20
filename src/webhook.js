@@ -1,10 +1,10 @@
-const { Client, middleware } = require("@line/bot-sdk");
+const { Client, validateSignature } = require("@line/bot-sdk");
 const { SignatureValidationFailed, JSONParseError } = require("@line/bot-sdk/exceptions");
 
 class Webhook {
 
     constructor(config) {
-        this.middleware = middleware(config);
+        this.secret = config.channelSecret;
         this.client = new Client(config);
     }
 
@@ -26,14 +26,40 @@ class Webhook {
         }
     }
 
-    endpoint(body) {
-        let event = body.events[0];
+    receive(rawBody, signature) {
+        let events = this.parseEvents(rawBody, signature);
+        return events.map(this.handleEvent.bind(this));
+    }
+
+    async handleEvent(event) {
         if (event.type === "message") {
-            this.client.replyMessage(event.replyToken, {
+            return await this.client.replyMessage(event.replyToken, {
                 type: "text",
                 text: "こんにちは",
             });
         }
+    }
+
+    parseEvents(rawBody, signature) {
+        let isValid = validateSignature(rawBody, this.secret, signature);
+        if (!isValid) {
+            throw new SignatureValidationFailed("signature validation failed", signature);
+        }
+
+        let data;
+        try {
+            data = JSON.parse(rawBody);
+        }
+        catch (error) {
+            throw new JSONParseError(error.message, rawBody);
+        }
+
+        let hasWellFormedEvents = Array.isArray(data.events);
+        if (!hasWellFormedEvents) {
+            throw new JSONParseError("no well-formed events", rawBody);
+        }
+
+        return data.events;
     }
 }
 

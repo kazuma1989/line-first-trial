@@ -1,4 +1,5 @@
 const express = require("express");
+const { raw: rawParser } = require("body-parser");
 
 const logger = require("./logger.js");
 const { Webhook } = require("./webhook.js");
@@ -12,6 +13,9 @@ let listen = () => {
 
     let app = express();
     app.use(logger.middleware());
+    app.use(rawParser({
+        type: "*/*"
+    }));
 
     // root endpoint
     app.get("/", (request, response, next) => {
@@ -20,10 +24,20 @@ let listen = () => {
 
     // LINE endpoint
     let webhook = new Webhook(config);
-    app.post("/callback", webhook.middleware, (request, response, next) => {
-        webhook.endpoint(request.body);
-        response.send(request.body);
+    app.post("/callback", async (request, response, next) => {
+        let rawBody = request.body.toString();
+        let signature = request.headers["x-line-signature"];
+        try {
+            await webhook.receive(rawBody || "", signature || "");
+        }
+        catch (error) {
+            next(error);
+            return;
+        }
+
+        response.status(200).send("OK");
     });
+
     app.use((error, request, response, next) => {
         let { status, message } = Webhook.handleError(error);
         if (status || message) {
@@ -35,7 +49,7 @@ let listen = () => {
     });
 
     return app.listen(port, () => {
-        logger.info(`Node app is running on port ${port}`);
+        logger.info(`app is running on port ${port}`);
     });
 }
 

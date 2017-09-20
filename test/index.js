@@ -21,9 +21,8 @@ describe("index.js は", () => {
         let stubMiddleware = logger.middleware(splitStream());
         stubs = [
             sinon.stub(logger, "info"),
-            sinon.stub(logger, "debug"),
             sinon.stub(logger, "middleware").returns(stubMiddleware),
-            sinon.stub(Client.prototype, "replyMessage"),
+            sinon.stub(Client.prototype, "replyMessage").returns(Promise.resolve()),
         ];
     });
     after(() => {
@@ -43,53 +42,121 @@ describe("index.js は", () => {
         assert.equal(body, "hello world");
     });
 
-    it("POST /callback は送信したデータと同じものを返す", async () => {
-        let requestBody = {
-            events: [
-                {
-                    type: "message",
-                    replyToken: "yyy",
-                },
-            ],
-        };
-        let signature = createHmac("SHA256", process.env.CHANNEL_SECRET).update(JSON.stringify(requestBody)).digest("base64");
+    describe("POST /callback に対して", () => {
+        let postJsonWithSignature = async (rawBody) => {
+            let signature = createHmac("SHA256", process.env.CHANNEL_SECRET).update(rawBody).digest("base64");
 
-        let body = await request.post(baseUrl + "/callback", {
-            headers: {
-                "X-Line-Signature": signature,
-            },
-            json: requestBody
-        });
-
-        assert.deepEqual(body, requestBody);
-        sinon.assert.calledWith(Client.prototype.replyMessage, requestBody.events[0].replyToken, {
-            type: "text",
-            text: "こんにちは",
-        });
-    });
-
-    it("POST /callback は適切なヘッダーがないと 401 を返す", async () => {
-        try {
-            await request.post(baseUrl + "/callback", {
+            return await request.post(baseUrl + "/callback", {
                 headers: {
-                    "X-Line-Signature": "this is invalid",
+                    "Content-Type": "application/json",
+                    "X-Line-Signature": signature,
                 },
-                json: {}
+                body: rawBody,
             });
+        };
+
+        it("OK を返す", async () => {
+            let requestBody = {
+                events: [
+                    {
+                        type: "message",
+                        replyToken: "yyy",
+                    },
+                ],
+            };
+
+            let response = await postJsonWithSignature(JSON.stringify(requestBody));
+
+            assert.equal(response, "OK");
+            sinon.assert.calledWith(Client.prototype.replyMessage, requestBody.events[0].replyToken, {
+                type: "text",
+                text: "こんにちは",
+            });
+        });
+
+        it("JSON が期待した構文でないと 400 を返す", async () => {
+            let requestBody = {
+                events: [
+                    {
+                        type: "message",
+                        replyToken: "yyy",
+                    },
+                ],
+            };
+
+            try {
+                await postJsonWithSignature(JSON.stringify(requestBody).substring(1));
+            }
+            catch (errorResponse) {
+                assert.equal(errorResponse.statusCode, 400);
+                return;
+            }
+
             assert.fail();
-        }
-        catch (errorResponse) {
-            assert.equal(errorResponse.statusCode, 401);
-        }
+        });
+
+        it("JSON の構文エラー時に 400 を返す", async () => {
+            let requestBody = {
+                events: {
+                    isArray: false
+                }
+            };
+
+            try {
+                await postJsonWithSignature(JSON.stringify(requestBody));
+            }
+            catch (errorResponse) {
+                assert.equal(errorResponse.statusCode, 400);
+                return;
+            }
+
+            assert.fail();
+        });
+
+        it("X-Line-Signature ヘッダーがないと 401 を返す", async () => {
+            try {
+                await request.post(baseUrl + "/callback", {
+                    headers: {
+                        // "X-Line-Signature": "this is invalid",
+                    },
+                    json: {}
+                });
+            }
+            catch (errorResponse) {
+                assert.equal(errorResponse.statusCode, 401);
+                return;
+            }
+
+            assert.fail();
+        });
+
+        it("X-Line-Signature の値が間違っていると 401 を返す", async () => {
+            try {
+                await request.post(baseUrl + "/callback", {
+                    headers: {
+                        "X-Line-Signature": "this is invalid",
+                    },
+                    json: {}
+                });
+            }
+            catch (errorResponse) {
+                assert.equal(errorResponse.statusCode, 401);
+                return;
+            }
+
+            assert.fail();
+        });
     });
 
-    it("POST 以外の /callback は 404 を返す", async () => {
+    it("POST 以外の /callback に 404 を返す", async () => {
         try {
             await request.get(baseUrl + "/callback");
-            assert.fail();
         }
         catch (errorResponse) {
             assert.equal(errorResponse.statusCode, 404);
+            return;
         }
+
+        assert.fail();
     });
 });
