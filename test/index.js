@@ -10,22 +10,30 @@ const logger = require("../src/logger.js");
 
 describe("index.js は", () => {
     let baseUrl;
+    let envs;
     let stubs;
     before(() => {
-        process.env.CHANNEL_ACCESS_TOKEN = "xxx";
-        process.env.CHANNEL_SECRET = "xxx";
-        process.env.PORT = 3000;
+        envs = {
+            CHANNEL_ACCESS_TOKEN: "xxx",
+            CHANNEL_SECRET: "xxx",
+            PORT: 3000,
+        };
+        Object.keys(envs).forEach((key) => {
+            process.env[key] = envs[key];
+        });
 
         baseUrl = `http://localhost:${process.env.PORT}`;
 
-        let stubMiddleware = logger.middleware(splitStream());
         stubs = [
             sinon.stub(logger, "info"),
-            sinon.stub(logger, "middleware").returns(stubMiddleware),
             sinon.stub(Client.prototype, "replyMessage").returns(Promise.resolve()),
         ];
     });
     after(() => {
+        Object.keys(envs).forEach((key) => {
+            delete process.env[key];
+        });
+
         stubs.forEach(stub => stub.restore());
     });
 

@@ -6,10 +6,7 @@ const { Webhook } = require("./webhook.js");
 
 let listen = () => {
     const port = process.env.PORT;
-    const config = {
-        channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
-        channelSecret: process.env.CHANNEL_SECRET,
-    };
+    const secret = process.env.CHANNEL_SECRET;
 
     let app = express();
     app.use(express.static(`${__dirname}/img`));
@@ -23,7 +20,7 @@ let listen = () => {
     });
 
     // LINE endpoint
-    let webhook = new Webhook(config);
+    let webhook = new Webhook(secret);
     app.post("/callback", async (request, response, next) => {
         let rawBody = request.body.toString();
         let signature = request.headers["x-line-signature"];
